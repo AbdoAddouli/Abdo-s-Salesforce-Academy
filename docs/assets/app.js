@@ -730,7 +730,7 @@ function renderModule(mod) {
         <span class="lr-state guide">&#128214;</span>
         <span class="lr-info">
           <b>Full module guide</b>
-          <span class="lr-meta">complete walkthrough on GitHub &middot; sections, tables, code &amp; checklists${guideRead(mod.id) ? ' &middot; read &#10003;' : ''}</span>
+          <span class="lr-meta">complete walkthrough right here &middot; sections, tables, code &amp; checklists${guideRead(mod.id) ? ' &middot; read &#10003;' : ''}</span>
         </span>
         <span class="lr-arrow">&#8594;</span>
       </a>
@@ -1090,6 +1090,91 @@ function wireExercises() {
 
 /* ------------------------- guide page (external source) ------------------------- */
 
+const guideCache = Object.create(null);
+let guideSpy = null;
+
+function guideJson(slug, modId) {
+  return 'assets/guides/' + slug + '/' + modId + '.json';
+}
+
+function loadGuide(slug, modId) {
+  const key = slug + '/' + modId;
+  if (guideCache[key]) return Promise.resolve(guideCache[key]);
+  return fetch(guideJson(slug, modId))
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(data => { guideCache[key] = data; return data; });
+}
+
+function buildGuideToc(mod, toc) {
+  const box = $('#guideToc');
+  if (!box) return;
+  if (!toc.length) { box.innerHTML = '<div class="toc-title">On this page</div><div class="gt-empty">No sections</div>'; return; }
+  const nav = document.createElement('div');
+  nav.className = 'gt-nav';
+  toc.forEach(t => {
+    const a = document.createElement('a');
+    a.className = 'gt-item lvl' + t.level;
+    a.href = '#/a/' + cur.slug + '/guide/' + mod.id + '/' + t.id;
+    a.textContent = t.text;
+    a.dataset.anchor = t.id;
+    nav.appendChild(a);
+  });
+  box.innerHTML = '<div class="toc-title">On this page</div>';
+  box.appendChild(nav);
+
+  const setActive = (a) => {
+    $$('.gt-item', box).forEach(x => x.classList.remove('active'));
+    if (a) a.classList.add('active');
+  };
+  $$('.gt-item', box).forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    const el = document.getElementById(a.dataset.anchor);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    history.replaceState(null, '', a.getAttribute('href'));
+    setActive(a);
+  }));
+
+  if (guideSpy) guideSpy.disconnect();
+  if (!('IntersectionObserver' in window)) return;
+  const byAnchor = new Map($$('.gt-item', box).map(a => [a.dataset.anchor, a]));
+  guideSpy = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      const a = byAnchor.get(en.target.id);
+      if (a) setActive(a);
+    });
+  }, { rootMargin: '-100px 0px -70% 0px', threshold: 0 });
+  $$('.gt-item', box).forEach(a => {
+    const el = document.getElementById(a.dataset.anchor);
+    if (el) guideSpy.observe(el);
+  });
+}
+
+function paintGuide(mod) {
+  const body = $('#guideBody');
+  if (!body) return;
+  if (guideSpy) { guideSpy.disconnect(); guideSpy = null; }
+  const slug = cur.slug;
+  loadGuide(slug, mod.id).then(data => {
+    if (!cur || cur.slug !== slug || !$('#guideBody')) return;
+    body.innerHTML = data.html || '<p class="guide-fail">This guide is empty.</p>';
+    buildGuideToc(mod, data.toc || []);
+    if (route.anchor) {
+      const el = document.getElementById(route.anchor);
+      if (el) el.scrollIntoView({ block: 'start' });
+    }
+  }).catch(() => {
+    if (!cur || cur.slug !== slug || !$('#guideBody')) return;
+    body.innerHTML =
+      '<div class="guide-fail"><div class="gf-ico">&#128196;</div>' +
+      '<h3>This guide is not bundled yet</h3>' +
+      '<p>Run <code class="inline">node build/build-guides.mjs</code> to generate the in-site guides, or read the source file on GitHub.</p>' +
+      '<a class="btn primary" href="' + esc(guideUrl(cur, mod)) + '" target="_blank" rel="noopener">Open the source on GitHub &#8599;</a></div>';
+    const box = $('#guideToc');
+    if (box) box.innerHTML = '<div class="toc-title">On this page</div><div class="gt-empty">No sections</div>';
+  });
+}
+
 function renderGuide(mod) {
   const p = moduleProgress(mod.id);
   const read = guideRead(mod.id);
@@ -1103,9 +1188,9 @@ function renderGuide(mod) {
       <div class="ph-body">
         <div class="ph-kicker">Phase ${String(mod.n).padStart(2, '0')} &middot; complete guide</div>
         <h1>${mod.title}</h1>
-        <p class="qc-sub">The full roadmap guide lives in this academy&rsquo;s GitHub repository &mdash; every section, table, code sample and checklist from <code class="inline">${esc(mod.guide || 'the guide file')}</code>. Open it, read it end-to-end, then mark it read to complete the module. ${read ? '<b>You marked this guide as read.</b>' : ''}</p>
+        <p class="qc-sub">The whole phase guide, right here in the academy &mdash; every section, table, code sample and checklist from <code class="inline">${esc(mod.guide || 'the guide file')}</code>. Use the contents on the left to jump around, then mark it read to complete the module. ${read ? '<b>You marked this guide as read.</b>' : ''}</p>
         <div class="guide-meta">
-          <a class="btn primary" href="${url}" target="_blank" rel="noopener">&#128214; Open the guide on GitHub &#8599;</a>
+          <a class="btn ghost sm" href="${url}" target="_blank" rel="noopener">&#128196; View source on GitHub &#8599;</a>
           ${(mod.art || []).map(a => `<a class="artifact" target="_blank" rel="noopener" href="${artifactHref(a.href)}" style="--c:${mod.color}"><span class="a-ico">&#128444;&#65039;</span> <span>${a.label}</span></a>`).join('')}
         </div>
       </div>
@@ -1115,10 +1200,17 @@ function renderGuide(mod) {
       </div>
     </div>
 
+    <div class="guide-wrap">
+      <aside class="guide-toc" id="guideToc"><div class="toc-title">On this page</div><div class="gt-loading">Loading contents&hellip;</div></aside>
+      <article class="guide-article article" id="guideBody">
+        <div class="guide-loading"><span class="spinner"></span>Loading the full guide&hellip;</div>
+      </article>
+    </div>
+
     <div class="lesson-foot reveal">
       <div class="lf-left">
         <button class="btn primary" id="greadBtn">${read ? '&#10003; Guide read — toggle' : '&#10004; Mark guide as read'}</button>
-        <a class="btn ghost" href="${url}" target="_blank" rel="noopener">Open on GitHub &#8599;</a>
+        <a class="btn ghost" href="${url}" target="_blank" rel="noopener">Source on GitHub &#8599;</a>
       </div>
       <div class="lf-right">
         ${mod.n > 1 ? `<a class="btn ghost sm" href="${H('guide', cur.modules[mod.n - 2].id)}">&#8592; ${cur.modules[mod.n - 2].title}</a>` : ''}
@@ -1127,6 +1219,8 @@ function renderGuide(mod) {
           : `<a class="btn primary sm" href="${H('quiz', mod.id)}">&#127919; Take the final quiz &#8594;</a>`}
       </div>
     </div>`;
+
+  paintGuide(mod);
 
   const rb = $('#greadBtn');
   if (rb) rb.addEventListener('click', () => { markGuideRead(mod.id, !guideRead(mod.id)); toast(guideRead(mod.id) ? 'Guide marked as read — module complete! &#127881;' : 'Guide marked as unread'); render(); });

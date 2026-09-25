@@ -25,9 +25,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Validate committed curricula.js
-        run: |
-          node -e "const fs=require('fs'),vm=require('vm');const s=fs.readFileSync('docs/assets/curricula.js','utf8');new vm.Script(s);const c=vm.createContext({window:{}});new vm.Script(s).runInContext(c);const n=Object.keys(c.window.ABDO_DATA).length;if(n!==8){console.error('expected 8 academies, found '+n);process.exit(1)}console.log('OK - curricula.js aggregates '+n+' academies');"
+      - name: Validate curricula and bundled guides
+        run: node build/validate-bundle.mjs
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

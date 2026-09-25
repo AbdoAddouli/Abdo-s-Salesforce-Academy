@@ -13,93 +13,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { ACADEMIES, PROJECT, ROOT, repoBlob, liveUrl, repoUrl, evalCurriculum, evalAnswers } from './academies.mjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PROJECT = path.resolve(__dirname, '..');          // Abdo-s-Salesforce-Academy
-const ROOT    = path.resolve(PROJECT, '..');            // "Salesforce Abdo Academy"
-const OUT     = path.join(PROJECT, 'docs', 'assets', 'curricula.js');
-
-const ACADEMIES = [
-  {
-    slug: 'admin', cert: 'Salesforce Administrator', brand: 'Admin Academy',
-    name: 'Salesforce Administration', icon: '☁️', color: '#00A1E0',
-    desc: '14 phases from zero to cert-ready: data model, security, flows, approvals, data ops, analytics, and 5 capstone builds.',
-    repo: 'Salesforce_Administrator_RoadMap',
-    dir: path.join(ROOT, 'Salesforce Administrator', 'Salesforce Administration Roadmap'),
-  },
-  {
-    slug: 'ba', cert: 'Salesforce Business Analyst', brand: 'Business Analyst Academy',
-    name: 'Business Analysis', icon: '📊', color: '#8B5CF6',
-    desc: '17 phases on requirements, process mapping, agile discovery, and solution design with real artefact patterns.',
-    repo: 'Salesforce-Business-Analyst-Roadmap',
-    dir: path.join(ROOT, 'Salesforce Business Analyst', 'Salesforce Business Analyst Roadmap'),
-  },
-  {
-    slug: 'cpq', cert: 'Salesforce CPQ Specialist', brand: 'CPQ & Revenue Cloud Academy',
-    name: 'CPQ & Revenue Cloud (Quote-to-Cash)', icon: '💰', color: '#F59E0B',
-    desc: '17 phases of Quote-to-Cash: price books, quotes, approvals, amendment, multi-currency, and Revenue Cloud.',
-    repo: 'Salesforce-CPQ-Revenue-Cloud-Roadmap',
-    dir: path.join(ROOT, 'Salesforce CPQ & Revenue cloud', 'Salesforce CPQ  & Revenue Cloud Roadmap'),
-  },
-  {
-    slug: 'datacloud', cert: 'Salesforce Data Cloud Consultant', brand: 'Data Cloud Consultant Academy',
-    name: 'Data Cloud 360', icon: '🗄️', color: '#10B981',
-    desc: '18 phases across data lifecycle, DLO/DMO, segmentation, identity resolution, harmonisation and activation.',
-    repo: 'Salesforce-Data-cloud-360-RoadMap',
-    dir: path.join(ROOT, 'Salesforce Data cloud 360', 'Salesforce Data Cloud Roadmap'),
-  },
-  {
-    slug: 'dev', cert: 'Platform Developer I & II', brand: 'Developer I & II Academy',
-    name: 'Apex Development', icon: '🧑‍💻', color: '#6366F1',
-    desc: '17 phases of Apex, triggers, testing, LWC, integration and governor-limit mastery for Developer I & II.',
-    repo: 'Salesforce-Dev-I-II-Roadmap',
-    dir: path.join(ROOT, 'Salesforce Dev I and II roadmap', 'Salesfoerce Dev I & II'),
-  },
-  {
-    slug: 'headless', cert: 'Headless + MCP (Agent-Readable APIs)', brand: 'Headless & MCP Academy',
-    name: 'Headless Commerce & MCP', icon: '🤖', color: '#EC4899',
-    desc: '16 phases on Headless 360 layers, Composable Storefront, and Model Context Protocol servers for AI agents.',
-    repo: 'Salesforce-HeadLess-MCP',
-    dir: path.join(ROOT, 'Salesforce HeadLeess and MCP', 'Salesforce headless & MCP'),
-  },
-  {
-    slug: 'sales', cert: 'Sales Cloud Consultant', brand: 'Sales Cloud Academy',
-    name: 'Sales Cloud', icon: '🎯', color: '#0EA5E9',
-    desc: '11 phases covering pipelines, forecasting, territory management, CPQ-lite automation and Einstein selling.',
-    repo: 'Salesforce-SalesCloud-RoadMap',
-    dir: path.join(ROOT, 'salesforce Sales Cloud', 'Sales Cloud RoadMap'),
-  },
-  {
-    slug: 'service', cert: 'Service Cloud Consultant', brand: 'Service Cloud Consultant Academy',
-    name: 'Service Cloud', icon: '🎧', color: '#3B82F6',
-    desc: '17 modules across case lifecycle, entitlements, Omni-Channel, knowledge, console, Einstein and certification prep.',
-    repo: 'Salesforce-Service-Cloud-RoadMap',
-    dir: path.join(ROOT, 'salesforce Service cloud', 'Salesforce Service cloud roadmap'),
-  },
-];
-
-function repoBlob(repo) {
-  return `https://github.com/AbdoAddouli/${repo}/blob/main/`;
-}
-function live(repo) {
-  return `https://abdoaddouli.github.io/${repo}/`;
-}
-function github(repo) {
-  return `https://github.com/AbdoAddouli/${repo}`;
-}
-
-function evalFile(file) {
-  const src = fs.readFileSync(file, 'utf8');
-  const fn = new Function(src + '\n;return { ACADEMY, GUIDE };');
-  return fn();
-}
-
-function evalAnswers(file) {
-  const src = fs.readFileSync(file, 'utf8');
-  const fn = new Function(src + '\n;return { EXERCISE_ANSWERS };');
-  return fn();
-}
+const OUT = path.join(PROJECT, 'docs', 'assets', 'curricula.js');
 
 const registry = [];
 const warnings = [];
@@ -110,7 +26,8 @@ for (const cfg of ACADEMIES) {
   const ansFile = path.join(assets, 'answers.js');
   if (!fs.existsSync(curFile)) { warnings.push(`SKIP ${cfg.slug}: no curriculum.js`); continue; }
 
-  const { ACADEMY, GUIDE } = evalFile(curFile);
+  const { ACADEMY, GUIDE } = evalCurriculum(curFile);
+
   const slug = cfg.slug;
   const baseModule = path.join(cfg.dir, 'docs');
 
@@ -149,8 +66,8 @@ for (const cfg of ACADEMIES) {
       color: cfg.color,
       desc: cfg.desc,
       repo: cfg.repo,
-      github: github(cfg.repo),
-      live: live(cfg.repo),
+      github: repoUrl(cfg.repo),
+      live: liveUrl(cfg.repo),
       guideBase,
       repoBlob: repoBlob(cfg.repo),
       phases: modules.length,
