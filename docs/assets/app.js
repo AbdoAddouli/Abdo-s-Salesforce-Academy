@@ -14,7 +14,7 @@ function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   try { localStorage.setItem('abdo-academy-theme', t); } catch (e) {}
   const btn = document.getElementById('themeToggle');
-  if (btn) btn.textContent = t === 'dark' ? '&#127769;' : '&#9728;&#65039;';
+  if (btn) btn.innerHTML = t === 'dark' ? '&#127769;' : '&#9728;&#65039;';
 }
 
 /* ------------------------- small helpers ------------------------- */
@@ -1609,7 +1609,7 @@ function bindTopSearch() {
 
 const themeBtn = $('#themeToggle');
 if (themeBtn) {
-  themeBtn.textContent = getTheme() === 'dark' ? '&#127769;' : '&#9728;&#65039;';
+  themeBtn.innerHTML = getTheme() === 'dark' ? '&#127769;' : '&#9728;&#65039;';
   themeBtn.addEventListener('click', () => setTheme(getTheme() === 'dark' ? 'light' : 'dark'));
 }
 
