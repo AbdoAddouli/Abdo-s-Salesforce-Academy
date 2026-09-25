@@ -272,7 +272,7 @@ function hashFor() {
   const r = route;
   const a = r.acad || (cur ? cur.slug : '');
   if (r.view === 'phase')      return '/a/' + a + '/phase/' + r.mid;
-  if (r.view === 'lesson')     return '/a/' + a + '/lesson/' + r.mid + '/' + r.li;
+  if (r.view === 'lesson')     return '/a/' + a + '/lesson/' + r.mid + '/' + r.li + (r.anchor ? '/' + r.anchor : '');
   if (r.view === 'quiz')       return '/a/' + a + '/quiz/' + r.mid;
   if (r.view === 'guide')      return '/a/' + a + '/guide/' + r.mid + (r.anchor ? '/' + r.anchor : '');
   if (r.view === 'certificate')return '/a/' + a + '/certificate';
@@ -287,7 +287,7 @@ function parseHash() {
     const acad = parts[1];
     if (!ACADEMIES[acad]) return { view: 'dashboard', acad: null };
     if (parts[2] === 'phase')      return { view: 'phase', acad, mid: parts[3] };
-    if (parts[2] === 'lesson')     return { view: 'lesson', acad, mid: parts[3], li: Number(parts[4]) };
+    if (parts[2] === 'lesson')     return { view: 'lesson', acad, mid: parts[3], li: Number(parts[4]), anchor: parts[5] || null };
     if (parts[2] === 'quiz')       return { view: 'quiz', acad, mid: parts[3] };
     if (parts[2] === 'guide')      return { view: 'guide', acad, mid: parts[3], anchor: parts[4] || null };
     if (parts[2] === 'certificate')return { view: 'certificate', acad };
@@ -304,14 +304,14 @@ function navigate(view, mid, li, anchor) {
   render();
 }
 /* hash helper used inside templates: H('phase', mod.id) */
-function H(view, mid, li) {
+function H(view, mid, li, anchor) {
   const a = cur ? cur.slug : '';
   switch (view) {
     case 'dashboard': return '#/';
     case 'bookmarks': return '#/bookmarks';
     case 'academy':   return '#/a/' + a;
     case 'phase':     return '#/a/' + a + '/phase/' + mid;
-    case 'lesson':    return '#/a/' + a + '/lesson/' + mid + '/' + li;
+    case 'lesson':    return '#/a/' + a + '/lesson/' + mid + '/' + li + (anchor ? '/' + anchor : '');
     case 'quiz':      return '#/a/' + a + '/quiz/' + mid;
     case 'guide':     return '#/a/' + a + '/guide/' + mid;
     case 'certificate': return '#/a/' + a + '/certificate';
@@ -697,11 +697,38 @@ function renderHome() {
 
 /* ------------------------- module/phase page ------------------------- */
 
+/* Exercises live either as module-level cards (Admin) or as t:'ex'/'t:'proj'
+   blocks inside lessons (every other academy). The build emits mod.exIndex so
+   both shapes are reachable from the phase page. */
+function moduleExercises(mod) {
+  if (Array.isArray(mod.exIndex) && mod.exIndex.length) return mod.exIndex;
+  return (mod.exercises || []).map((ex, card) => ({ id: ex.id || null, li: -1, card, kind: ex.type === 'project' ? 'proj' : 'card' }));
+}
+
+function exerciseBlock(mod, entry) {
+  if (entry.li === -1) return (mod.exercises || [])[entry.card || 0] || null;
+  const lesson = mod.lessons[entry.li];
+  if (!lesson) return null;
+  return (lesson.blocks || []).find(b => (b.t === 'ex' || b.t === 'proj') && (b.id || null) === entry.id) || null;
+}
+
+function exerciseAnchorForId(id) {
+  return 'ex-' + String(id != null ? id : 'ex').replace(/[^\w-]/g, '-');
+}
+
+function exerciseAnchorId(mod, entry) {
+  if (entry.li === -1) {
+    const ex = (mod.exercises || [])[entry.card || 0] || {};
+    return 'ex-card-' + (ex.id != null ? ex.id : (ex.n != null ? ex.n : (entry.card || 0)));
+  }
+  return exerciseAnchorForId(entry.id != null ? entry.id : 'ex' + entry.li);
+}
+
 function renderModule(mod) {
   const p = moduleProgress(mod.id);
   const quizScore = store.quiz[kMod(cur.slug, mod.id)];
   const quizBest  = store.best[kMod(cur.slug, mod.id)];
-  const exCount = (mod.exercises || []).length;
+  const exCount = moduleExercises(mod).length;
 
   view.innerHTML = `
     <div class="crumb reveal"><a href="${H('dashboard')}">Dashboard</a> <span>&#8250;</span> <a href="${H('academy')}">${esc(cur.meta.brand)}</a> <span>&#8250;</span> <b>${mod.title}</b></div>
@@ -799,7 +826,7 @@ function renderLesson(mod, li) {
   const done = lessonDone(mod.id, li);
   const bm = isBookmarked(mod.id, li);
   const note = getNote(mod.id, li);
-  const exCount = (mod.exercises || []).length;
+  const exCount = moduleExercises(mod).length;
 
   view.innerHTML = `
     <div class="crumb reveal"><a href="${H('dashboard')}">Dashboard</a> <span>&#8250;</span> <a href="${H('academy')}">${esc(cur.meta.brand)}</a> <span>&#8250;</span> <a href="${H('phase', mod.id)}">${mod.title}</a> <span>&#8250;</span> <b>${lesson.title}</b></div>
@@ -907,7 +934,15 @@ function renderLesson(mod, li) {
   });
 
   store.lastOpen = { slug: cur.slug, mid: mod.id, li }; save();
-  requestAnimationFrame(() => window.scrollTo(0, 0));
+  /* Deep link from the phase exercise index (#/a/<slug>/lesson/<mid>/<li>/<ex-id>)
+     lands on that card instead of the top of the lesson. Repeat once the lazily
+     loaded answers have changed the page height. */
+  const anchorEl = route.anchor ? document.getElementById(route.anchor) : null;
+  requestAnimationFrame(() => {
+    if (anchorEl) anchorEl.scrollIntoView({ block: 'start' });
+    else window.scrollTo(0, 0);
+  });
+  if (anchorEl) setTimeout(() => anchorEl.scrollIntoView({ block: 'start' }), 400);
 }
 
 /* ------------------------- block renderer ------------------------- */
@@ -1025,7 +1060,7 @@ function renderBlock(b) {
         ? `<details class="ex-answer" data-ex="${esc(b.id)}"><summary><span class="ea-ico">&#128161;</span><span>Show answer</span><span class="ea-caret">&#9662;</span></summary><div class="ex-answer-body" data-ex-body="${esc(b.id)}"><div class="ex-answer-loading">Loading the reference answer&hellip;</div></div></details>`
         : '';
       return `
-        <div class="ex-card ${isProject ? 'proj' : ''}" data-stars="${b.stars || 1}">
+        <div class="ex-card ${isProject ? 'proj' : ''}" data-stars="${b.stars || 1}" id="${esc(exerciseAnchorForId(b.id))}">
           <div class="ex-head">
             <span class="ex-id">${esc(b.id)}</span>
             <span class="ex-stars">${stars}</span>
@@ -1067,24 +1102,22 @@ function renderSol(text) {
   }).join('');
 }
 
+/* ------------------------- phase exercises ------------------------- */
+
 function renderExercises(mod) {
-  if (!mod.exercises || !mod.exercises.length) return '';
-  const exCount = mod.exercises.length;
+  const index = moduleExercises(mod);
+  if (!index.length) return '';
+
+  const cards = mod.exercises || [];
+  const lessons = index.filter(e => e.li !== -1);
   const levels = { 'Easy': 'ex-level easy', 'Medium': 'ex-level med', 'Hard': 'ex-level hard' };
-  return `
-    <div class="exercises reveal" id="exercises" style="--c:${mod.color}">
-      <div class="ex-head">
-        <div class="ex-head-icon">&#129513;</div>
-        <div>
-          <h2>Exercises &amp; Mini Projects</h2>
-          <p class="ex-sub">${exCount} hands-on tasks. Try each one in your org first &mdash; solutions are gated so nothing spoils your practice.</p>
-        </div>
-      </div>
-      ${mod.exercises.map(ex => {
-        const lvl = levels[ex.level] || 'ex-level';
-        const badge = ex.type === 'project' ? '<span class="ex-type-badge project">project</span>' : '<span class="ex-type-badge exercise">exercise</span>';
-        return `
-        <div class="ex-card" data-revealed="false">
+
+  const cardHtml = cards.map((ex, card) => {
+    const lvl = levels[ex.level] || 'ex-level';
+    const badge = ex.type === 'project' ? '<span class="ex-type-badge project">project</span>' : '<span class="ex-type-badge exercise">exercise</span>';
+    const anchor = exerciseAnchorId(mod, { li: -1, card, id: ex.id });
+    return `
+        <div class="ex-card" id="${esc(anchor)}" data-revealed="false">
           <div class="ex-summary">
             <div class="ex-meta-line">
               <span class="ex-num">#${ex.n}</span>
@@ -1113,7 +1146,41 @@ function renderExercises(mod) {
             </div>
           </div>
         </div>`;
-      }).join('')}
+  }).join('');
+
+  const lessonHtml = lessons.map((entry) => {
+    const block = exerciseBlock(mod, entry);
+    if (!block) return '';
+    const title = block.title || block.id || 'Exercise';
+    const stars = entry.stars || block.stars || 0;
+    const lesson = mod.lessons[entry.li];
+    const hasAnswer = block.id != null && answerIds().indexOf(block.id) > -1;
+    return `
+        <a class="ex-link" href="${H('lesson', mod.id, entry.li, exerciseAnchorId(mod, entry))}" style="--c:${mod.color}">
+          <span class="ex-link-badge ${entry.kind === 'proj' ? 'proj' : 'ex'}">${entry.kind === 'proj' ? 'project' : esc(block.id || '')}</span>
+          <span class="ex-link-info">
+            <b>${esc(title)}</b>
+            <span class="ex-link-meta">${lesson ? `Lesson ${entry.li + 1} &middot; ${esc(lesson.title)}` : `Lesson ${entry.li + 1}`}${stars ? ' &middot; ' + '&#9733;'.repeat(stars) : ''}${hasAnswer ? ' &middot; reference answer &#128161;' : ''}</span>
+          </span>
+          <span class="lr-arrow">&#8594;</span>
+        </a>`;
+  }).join('');
+
+  const sub = lessons.length
+    ? `${index.length} hands-on task${index.length === 1 ? '' : 's'}${cards.length ? ` &middot; ${cards.length} below with gated solutions` : ' across the lessons of this phase'}.`
+    : `${index.length} hands-on tasks. Try each one in your org first &mdash; solutions are gated so nothing spoils your practice.`;
+
+  return `
+    <div class="exercises reveal" id="exercises" style="--c:${mod.color}">
+      <div class="ex-head">
+        <div class="ex-head-icon">&#129513;</div>
+        <div>
+          <h2>Exercises &amp; Mini Projects</h2>
+          <p class="ex-sub">${sub}</p>
+        </div>
+      </div>
+      ${lessonHtml ? `<div class="ex-links">${lessonHtml}</div>` : ''}
+      ${cardHtml}
     </div>`;
 }
 

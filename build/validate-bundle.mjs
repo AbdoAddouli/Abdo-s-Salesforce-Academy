@@ -26,6 +26,7 @@ let guides = 0;
 let kb = 0;
 let answerKeys = 0;
 let answerKb = 0;
+let exIndexed = 0;
 
 if (fs.existsSync(DATA)) {
   const data = loadJs(DATA).ABDO_DATA || {};
@@ -53,6 +54,42 @@ if (fs.existsSync(DATA)) {
     };
 
     for (const m of entry.modules) {
+      /* exIndex is what makes the phase-page "Exercises & Mini Projects" section
+         work for academies whose exercises live inside lesson blocks instead of
+         m.exercises. It must cover every exercise exactly once and point at a
+         real lesson. */
+      if (!Array.isArray(m.exIndex)) fail(`${slug}/${m.id}: no exIndex array`);
+      else {
+        const seen = new Set();
+        (m.exercises || []).forEach((ex, card) => {
+          const e = m.exIndex[card];
+          if (!e || e.li !== -1 || e.card !== card) fail(`${slug}/${m.id}: exIndex card ${card} does not map to exercises[${card}]`);
+        });
+        m.exIndex.filter(e => e.li !== -1).forEach(e => {
+          const key = e.li + '|' + e.id;
+          if (seen.has(key)) fail(`${slug}/${m.id}: exIndex lists ${e.id} twice for lesson ${e.li + 1}`);
+          seen.add(key);
+          const lesson = (m.lessons || [])[e.li];
+          if (!lesson) { fail(`${slug}/${m.id}: exIndex points at missing lesson ${e.li + 1}`); return; }
+          const found = (lesson.blocks || []).some(b => (b.t === 'ex' || b.t === 'proj') && (b.id || null) === (e.id || null));
+          if (!found) fail(`${slug}/${m.id}: exIndex points at lesson ${e.li + 1} for ${e.id || '(no id)'}, which has no such exercise`);
+        });
+        const real = (m.exercises || []).length +
+          (m.lessons || []).reduce((n, l) => n + (l.blocks || []).filter(b => b.t === 'ex' || b.t === 'proj').length, 0);
+        if (real && m.exIndex.length !== real) fail(`${slug}/${m.id}: exIndex has ${m.exIndex.length} entries but the module has ${real} exercise(s)`);
+        /* The phase page deep links to #/<anchor> on the lesson page, and the card
+           is rendered with that same id. Two exercises must not share one. */
+        const anchors = new Map();
+        for (const e of m.exIndex) {
+          const a = e.li === -1
+            ? 'ex-card-' + (() => { const ex = (m.exercises || [])[e.card || 0] || {}; return ex.id != null ? ex.id : (ex.n != null ? ex.n : (e.card || 0)); })()
+            : 'ex-' + String(e.id != null ? e.id : 'ex' + e.li).replace(/[^\w-]/g, '-');
+          if (anchors.has(a)) fail(`${slug}/${m.id}: exercises ${anchors.get(a)} and ${e.id} share the anchor id ${a}`);
+          anchors.set(a, e.id);
+        }
+        exIndexed += m.exIndex.length;
+      }
+
       for (const ex of m.exercises || []) {
         if (ex.id) exercises.add(ex.id);
         codeOk(ex.code, `${slug}/${m.id} exercise ${ex.id || ex.n}`);
@@ -142,4 +179,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`OK - ${academies} academies, ${phases} phases, ${guides} bundled guides, ~${kb} KB of guide HTML, ${answerKeys} answer keys (~${answerKb} KB)`);
+console.log(`OK - ${academies} academies, ${phases} phases, ${guides} bundled guides, ~${kb} KB of guide HTML, ${answerKeys} answer keys (~${answerKb} KB), ${exIndexed} indexed exercises`);

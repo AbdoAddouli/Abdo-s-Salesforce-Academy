@@ -54,6 +54,24 @@ for (const cfg of ACADEMIES) {
     norm.quiz.title = norm.quiz.title || 'Module quiz';
     norm.quiz.mins = norm.quiz.mins || 8;
     norm.quiz.questions = Array.isArray(norm.quiz.questions) ? norm.quiz.questions : [];
+
+    /* Exercise index. Source roadmaps put exercises in two places: a
+       module-level `exercises` array (Admin) or `t:'ex'`/`t:'proj'` blocks
+       inside lesson blocks (everyone else). Collect both so the phase page can
+       link to them. `li === -1` marks a module-level card (identified by its
+       position in `card`); anything else is the owning lesson index.
+       Titles stay in the source data to keep this index small. */
+    norm.exIndex = [];
+    (norm.exercises || []).forEach((ex, card) => {
+      norm.exIndex.push({ id: ex.id || null, li: -1, card, kind: ex.type === 'project' ? 'proj' : 'card' });
+    });
+    norm.lessons.forEach((l, li) => {
+      for (const b of l.blocks || []) {
+        if (b.t !== 'ex' && b.t !== 'proj') continue;
+        norm.exIndex.push({ id: b.id || null, li, kind: b.t, stars: b.stars || 0 });
+      }
+    });
+
     return norm;
   });
 
