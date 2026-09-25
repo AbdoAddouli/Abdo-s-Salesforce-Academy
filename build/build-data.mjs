@@ -6,7 +6,12 @@
  * It reads each source roadmap's docs/assets/curriculum.js and answers.js,
  * evaluates them in a sandbox, prefixes module ids with an academy slug so
  * they never collide, normalises the module schema, and emits
- *   docs/assets/curricula.js
+ *   docs/assets/curricula.js        (lesson summaries + answer id list)
+ *   docs/assets/answers/<slug>.json (answer keys pre-rendered to HTML)
+ *
+ * Answer keys are converted with the same markdown converter the phase guides
+ * use, so the browser never needs a markdown parser and curricula.js stays
+ * small - answer HTML is fetched on demand, like the guides.
  *
  * Re-run any time a source roadmap changes:  node build/build-data.mjs
  * ========================================================================== */
@@ -14,11 +19,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ACADEMIES, PROJECT, ROOT, repoBlob, liveUrl, repoUrl, evalCurriculum, evalAnswers } from './academies.mjs';
+import { renderMarkdown } from './markdown.mjs';
 
 const OUT = path.join(PROJECT, 'docs', 'assets', 'curricula.js');
+const ANSWERS_OUT = path.join(PROJECT, 'docs', 'assets', 'answers');
 
 const registry = [];
 const warnings = [];
+
+const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESC_MAP[c]);
 
 for (const cfg of ACADEMIES) {
   const assets = path.join(cfg.dir, 'docs', 'assets');
@@ -53,6 +63,37 @@ for (const cfg of ACADEMIES) {
     catch (e) { warnings.push(`${cfg.slug}: answers.js eval failed (${e.message})`); }
   }
 
+  /* Exercise ids referenced by the academy, used to keep curricula.js honest. */
+  const exerciseIds = new Set();
+  for (const m of modules) {
+    for (const ex of m.exercises || []) if (ex.id) exerciseIds.add(ex.id);
+    for (const l of m.lessons || []) {
+      for (const b of l.blocks || []) if ((b.t === 'ex' || b.t === 'proj') && b.id) exerciseIds.add(b.id);
+    }
+  }
+
+  const answerIds = Object.keys(answers).filter((id) => exerciseIds.has(id)).sort();
+  const orphans = Object.keys(answers).filter((id) => !exerciseIds.has(id));
+  if (orphans.length) warnings.push(`${cfg.slug}: ${orphans.length} answer key(s) with no matching exercise: ${orphans.slice(0, 5).join(', ')}${orphans.length > 5 ? '…' : ''}`);
+
+  const answerHtml = {};
+  for (const id of answerIds) {
+    const value = answers[id];
+    const isObj = value && typeof value === 'object';
+    const body = String(isObj ? (value.body || '') : value).trim();
+    let html = body
+      ? renderMarkdown(body, { headingOffset: 2 }).html
+      : '<p><em>No reference answer recorded yet.</em></p>';
+    if (isObj && value.title) html = '<p><strong>' + esc(value.title) + '</strong></p>' + html;
+    answerHtml[id] = html;
+  }
+
+  if (Object.keys(answerHtml).length) {
+    fs.mkdirSync(ANSWERS_OUT, { recursive: true });
+    const body = JSON.stringify(answerHtml).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+    fs.writeFileSync(path.join(ANSWERS_OUT, cfg.slug + '.json'), body, 'utf8');
+  }
+
   const guideBase = (GUIDE && GUIDE.trim()) ? GUIDE : repoBlob(cfg.repo) + 'docs/guide/';
 
   registry.push({
@@ -74,11 +115,11 @@ for (const cfg of ACADEMIES) {
       source: path.relative(ROOT, cfg.dir),
     },
     modules,
-    answers,
+    answerIds,
   });
 
   const lessonCount = modules.reduce((a, m) => a + m.lessons.length, 0);
-  console.log(`✓ ${slug.padEnd(10)} ${String(modules.length).padStart(2)} phases · ${String(lessonCount).padStart(3)} lessons · ${Object.keys(answers).length} answers`);
+  console.log(`✓ ${cfg.slug.padEnd(10)} ${String(modules.length).padStart(2)} phases · ${String(lessonCount).padStart(3)} lessons · ${answerIds.length} answers`);
 }
 
 /* ---- serialize (compact, safe line separators) ---- */

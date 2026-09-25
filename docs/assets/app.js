@@ -29,7 +29,7 @@ const scrollToId = id => { const el = document.getElementById(id); if (el) el.sc
 
 const ACADEMIES = window.ABDO_DATA || {};
 const SLUGS = Object.keys(ACADEMIES);
-let cur = null;                       // active academy { slug, meta, modules, answers }
+let cur = null;                       // active academy { slug, meta, modules, answerIds }
 
 const curMods = () => (cur ? cur.modules : []);
 const byId = id => curMods().find(m => m.id === id);
@@ -876,6 +876,9 @@ function renderLesson(mod, li) {
   if (exBtn) exBtn.addEventListener('click', () => { navigate('phase', mod.id); requestAnimationFrame(() => scrollToId('exercises')); });
   $$('.toc-ex', view).forEach(a => a.addEventListener('click', e => { e.preventDefault(); navigate('phase', mod.id); requestAnimationFrame(() => scrollToId('exercises')); }));
 
+  hydrateAnswers();
+  $$('.ex-answer[data-ex]').forEach(det => det.addEventListener('toggle', () => { if (det.open) fillAnswer($('[data-ex-body]', det)); }));
+
   const noteBtn = $('#noteBtn');
   const notePanel = $('#notesPanel');
   if (noteBtn && notePanel) noteBtn.addEventListener('click', () => {
@@ -909,8 +912,68 @@ function renderLesson(mod, li) {
 
 /* ------------------------- block renderer ------------------------- */
 
-function exerciseAnswers() {
-  return (cur && cur.answers) ? cur.answers : {};
+const answerCache = Object.create(null);
+
+function answerIds() {
+  return (cur && Array.isArray(cur.answerIds)) ? cur.answerIds : [];
+}
+
+function loadAnswers(slug) {
+  if (answerCache[slug]) return answerCache[slug];
+  answerCache[slug] = fetch('assets/answers/' + slug + '.json')
+    .then(r => (r.ok ? r.json() : {}))
+    .catch(() => ({}));
+  return answerCache[slug];
+}
+
+function fillAnswer(el) {
+  if (!el || el.getAttribute('data-filled')) return;
+  const id = el.getAttribute('data-ex-body');
+  const slug = cur ? cur.slug : null;
+  if (!id || !slug) return;
+  loadAnswers(slug).then(map => {
+    if (!cur || cur.slug !== slug) return;
+    const target = $('[data-ex-body]', el.closest('.ex-answer') || document);
+    if (!target || target.getAttribute('data-filled')) return;
+    const html = map[id];
+    if (!html) { const det = target.closest('.ex-answer'); if (det) det.remove(); return; }
+    target.innerHTML = html;
+    target.setAttribute('data-filled', '1');
+  });
+}
+
+function hydrateAnswers() {
+  $$('.ex-answer-body[data-ex-body]').forEach(fillAnswer);
+}
+
+/* Source roadmaps declare exercise code three ways: a plain string, {x, lang},
+   or a map of named snippets ({setup: [...], apex}). Normalise all of them. */
+const CODE_LANGS = { apex: 'apex', js: 'javascript', ts: 'typescript', soql: 'soql', sql: 'sql', html: 'markup', xml: 'markup' };
+
+function codeText(v) {
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v)) return v.filter(x => typeof x === 'string' && x.trim()).join('\n');
+  return '';
+}
+
+function codeSpecs(code) {
+  if (!code) return [];
+  if (typeof code === 'string' || Array.isArray(code)) {
+    const t = codeText(code);
+    return t.trim() ? [{ x: t }] : [];
+  }
+  if (typeof code !== 'object') return [];
+  if (code.x != null) {
+    const t = codeText(code.x);
+    return t.trim() ? [{ x: t, lang: code.lang }] : [];
+  }
+  return Object.keys(code)
+    .map(k => ({ x: codeText(code[k]), lang: CODE_LANGS[k] || 'text' }))
+    .filter(s => s.x.trim());
+}
+
+function renderCodeBlock(code) {
+  return codeSpecs(code).map(s => renderBlock({ t: 'code', x: s.x, lang: s.lang })).join('');
 }
 
 function renderBlock(b) {
@@ -953,14 +1016,13 @@ function renderBlock(b) {
           : `<li class="ex-group"><b>${esc(i.h)}</b><ul>${i.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></li>`
       ).join('');
       const stars = '&#9733;'.repeat(b.stars || 1) + '&#9734;'.repeat(Math.max(0, 4 - (b.stars || 1)));
-      const code = b.code ? renderBlock({ t: 'code', ...b.code }) : '';
+      const code = renderCodeBlock(b.code);
       const footer = isProject
         ? `<div class="ex-verify">&#127919; Success — ${esc(b.success || '')}</div>`
         : (b.verify ? `<div class="ex-verify">&#10004; Verify — ${esc(b.verify)}</div>` : '');
-      const answers = exerciseAnswers();
-      const hasAnswer = answers[b.id];
+      const hasAnswer = answerIds().indexOf(b.id) > -1;
       const answer = hasAnswer
-        ? `<details class="ex-answer"><summary><span class="ea-ico">&#128161;</span><span>Show answer</span><span class="ea-caret">&#9662;</span></summary><div class="ex-answer-body">${md(answers[b.id])}</div></details>`
+        ? `<details class="ex-answer" data-ex="${esc(b.id)}"><summary><span class="ea-ico">&#128161;</span><span>Show answer</span><span class="ea-caret">&#9662;</span></summary><div class="ex-answer-body" data-ex-body="${esc(b.id)}"><div class="ex-answer-loading">Loading the reference answer&hellip;</div></div></details>`
         : '';
       return `
         <div class="ex-card ${isProject ? 'proj' : ''}" data-stars="${b.stars || 1}">

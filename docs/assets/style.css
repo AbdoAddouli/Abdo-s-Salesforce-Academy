@@ -501,6 +501,11 @@ tbody tr:hover td { background: var(--table-hover); }
 }
 .ex-answer-body .codeblock { margin: 10px 0; }
 .ex-answer-body .tbl { margin: 10px 0; }
+.ex-answer-body h3 { margin: 14px 0 6px; color: var(--text); font-size: 14.5px; }
+.ex-answer-body .g-quote { margin: 10px 0; }
+.ex-answer-body .g-hr { margin: 14px 0; }
+.ex-answer-body .task-list { padding-left: 18px; }
+.ex-answer-loading { color: var(--muted); font-size: 13px; padding: 4px 0; }
 
 /* ---------- full guide page ---------- */
 .guide-hero {
