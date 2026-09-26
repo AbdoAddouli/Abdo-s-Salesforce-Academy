@@ -1,8 +1,9 @@
 /* =============================================================================
  * Abdo's Salesforce Academy — unified learning app
- * One shell, eight academies (admin, ba, cpq, datacloud, dev, headless, sales,
- * service). Hash routing with an academy prefix, shared renderer, unified
- * search, and a single namespaced progress store with legacy-key migration.
+ * One shell, nine academies (admin, ba, cpq, datacloud, dev, headless, sales,
+ * service, mktcloud). Hash routing with an academy prefix, shared renderer,
+ * unified search, and a single namespaced progress store with legacy-key
+ * migration.
  * ============================================================================= */
 
 /* ------------------------- theme ------------------------- */
@@ -172,11 +173,11 @@ function resumePoint(entry) {
 }
 
 /* ------------------------- legacy migration ------------------------- */
-/* The eight source sites each used their own localStorage key (several of
+/* The source sites each used their own localStorage key (several of
    them shared one by accident). On first run we adopt whatever progress we
    can match to this store so nothing is lost when you move to the academy. */
 
-const LEGACY_KEYS = ['devacademy-v1', 'scacademy-v1', 'sccacademy-v1'];
+const LEGACY_KEYS = ['devacademy-v1', 'scacademy-v1', 'sccacademy-v1', 'mcc-consultant-v1'];
 
 function migrateLegacy() {
   let existing;

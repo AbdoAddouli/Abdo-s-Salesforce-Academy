@@ -1,6 +1,6 @@
 # Abdo's Salesforce Academy
 
-> **One studio for all 8 Salesforce roadmaps.** Master the Salesforce ecosystem from a single site — official-style study roadmaps for certification tracks and skills, each with phases, lessons, quizzes, exercises, progress tracking and printable certificates.
+> **One studio for all 9 Salesforce roadmaps.** Master the Salesforce ecosystem from a single site — official-style study roadmaps for certification tracks and skills, each with phases, lessons, quizzes, exercises, progress tracking and printable certificates.
 
 🔗 **Live site:** https://abdoaddouli.github.io/Abdo-s-Salesforce-Academy/
 
@@ -9,7 +9,7 @@
 ## Table of contents
 
 - [What is this?](#what-is-this)
-- [The 8 academies](#the-8-academies)
+- [The 9 academies](#the-9-academies)
 - [How to use the site](#how-to-use-the-site)
 - [Progress, bookmarks & certificates](#progress-bookmarks--certificates)
 - [Tech stack & architecture](#tech-stack--architecture)
@@ -22,7 +22,7 @@
 
 ## What is this?
 
-The original eight certification roadmaps each lived in their **own GitHub repo and its own little website**. This project merges them all into **one single-page application** so you can:
+The original nine certification roadmaps each lived in their **own GitHub repo and its own little website**. This project merges them all into **one single-page application** so you can:
 
 - see your **overall progress across every certification** on one dashboard,
 - **search once** and find lessons, quizzes and concepts from any academy,
@@ -32,14 +32,14 @@ The original eight certification roadmaps each lived in their **own GitHub repo 
 ### Why was it built this way?
 
 - Every source academy is a Salesforce DX-style project whose curriculum lives in a single `curriculum.js` data file.
-- A small build script (`build/build-data.mjs`) reads all eight files, **renames module ids** so they never collide, and merges everything into one data bundle.
+- A small build script (`build/build-data.mjs`) reads all nine files, **renames module ids** so they never collide, and merges everything into one data bundle.
 - `app.js` renders that bundle — same look & feel as the original sites, but unified.
 
 No server, no database, no framework dependencies. Everything runs in the browser and your progress stays on your machine.
 
 ---
 
-## The 8 academies
+## The 9 academies
 
 | # | Academy | Phases | Focus | Source repo | Live site |
 |---|---------|-------:|-------|-------------|-----------|
@@ -51,6 +51,7 @@ No server, no database, no framework dependencies. Everything runs in the browse
 | 6 | **Headless & MCP** | 16 | Headless architecture via APIs, and Model Context Protocol (MCP) servers for Agentforce & AI tooling | [Salesforce-HeadLeess-MCP](https://github.com/AbdoAddouli/Salesforce-HeadLeess-MCP) | [open](https://abdoaddouli.github.io/Salesforce-HeadLeess-MCP/) |
 | 7 | **Sales Cloud** | 11 | Leads & opportunities, forecasting, Sales Engagement, Einstein — for the **Sales Cloud Consultant** certification | [Salesforce-SalesCloud-RoadMap](https://github.com/AbdoAddouli/Salesforce-SalesCloud-RoadMap) | [open](https://abdoaddouli.github.io/Salesforce-SalesCloud-RoadMap/) |
 | 8 | **Service Cloud** | 17 | Case management, Omni-Channel, Einstein bots, flows & knowledge — for the **Service Cloud Consultant** certification | [Salesforce-Service-Cloud-RoadMap](https://github.com/AbdoAddouli/Salesforce-Service-Cloud-RoadMap) | [open](https://abdoaddouli.github.io/Salesforce-Service-Cloud-RoadMap/) |
+| 9 | **Marketing Cloud** | 17 | Subscriber data model, Data 360 identity resolution, deliverability, journeys, consent, Agentforce & analytics — for the **Marketing Cloud Consultant** certification | [Salesforce-Marketing-Cloud-RoadMap](https://github.com/AbdoAddouli/Salesforce-Marketing-Cloud-RoadMap) | [open](https://abdoaddouli.github.io/Salesforce-Marketing-Cloud-RoadMap/) |
 
 ---
 
@@ -60,7 +61,7 @@ No server, no database, no framework dependencies. Everything runs in the browse
 The first screen shows a card for every academy with its live progress bar, a few overall stats (units completed, quiz questions answered perfectly, estimated remaining study time) and a "Continue" button that drops you back exactly where you left off.
 
 ### Navigation & academy switcher
-- The **sidebar** shows the current academy's phases; a **dropdown at the top** switches between all eight academies.
+- The **sidebar** shows the current academy's phases; a **dropdown at the top** switches between all nine academies.
 - The **top bar** has a global **search** — press `/` anywhere (or click the search box) and search across every academy. Results include phases, lessons and quizzes.
 
 ### Routes (hash-based, bookmarkable)
@@ -94,7 +95,7 @@ Many quizzes and exercises hide their solution until you **answer or attempt the
 **Pure static web app — no build step, no dependencies at runtime.**
 
 ```
-8 source academies                          THIS REPO: Abdo-s-Salesforce-Academy
+9 source academies                          THIS REPO: Abdo-s-Salesforce-Academy
 (salesforce-* RoadMap repos)               ┌──────────────────────────────────────┐
   docs/assets/curriculum.js                 │  docs/  (what GitHub Pages serves)   │
   docs/assets/answers.js                    │  ├─ index.html   (app shell)         │
@@ -112,7 +113,7 @@ Many quizzes and exercises hide their solution until you **answer or attempt the
         └────────────────────────  → emits docs/assets/curricula.js
 ```
 
-- `docs/assets/curricula.js` — the merged data bundle for all 8 academies. **Generated by `build/build-data.mjs` — do not edit by hand.**
+- `docs/assets/curricula.js` — the merged data bundle for all 9 academies. **Generated by `build/build-data.mjs` — do not edit by hand.**
 - `docs/assets/app.js` — the unified application (routing, rendering, quiz engine, gated exercises, progress store, search).
 - `docs/assets/style.css` — design system shared by every view.
 - `.github/workflows/deploy.yml` — deploys `docs/` to GitHub Pages on every push to `main`.
@@ -132,7 +133,7 @@ python -m http.server 8000 -d docs
 
 ### Regenerating the data bundle
 
-Run this whenever a curriculum in one of the eight source academies changes:
+Run this whenever a curriculum in one of the nine source academies changes:
 
 ```bash
 node build/build-data.mjs
@@ -140,13 +141,13 @@ node build/build-data.mjs
 
 What it does:
 
-1. Walks the **sibling folders** next to this repo (the eight academy repos).
+1. Walks the **sibling folders** next to this repo (the nine academy repos).
 2. Evaluates each `curriculum.js` / `answers.js` in a sandbox to read `ACADEMY` and `GUIDE`.
 3. Prefixes every module id with the academy's slug (e.g. `fund` → `admin-fund`) so ids never clash — they collide between academies today.
 4. Normalises the different module shapes (gated solutions, `ex`/`proj` blocks, inline answers, Data Cloud `hero` files…) into one schema.
 5. Writes `docs/assets/curricula.js`, deterministically — running it twice produces the exact same bytes, so commits stay clean.
 
-> **CI safety net:** the Pages workflow **validates the committed bundle** on every push (asks Node to parse it and confirm all **8 academies** are present), so a broken bundle can never be deployed.
+> **CI safety net:** the Pages workflow **validates the committed bundle** on every push (asks Node to parse it and confirm all **9 academies** are present), so a broken bundle can never be deployed.
 
 ---
 
@@ -183,8 +184,11 @@ A curated toolkit to help you study, practice, and go all the way to certificati
 | Developer II | https://trailhead.salesforce.com/credentials/platform-developer-ii |
 | Sales Cloud Consultant | https://trailhead.salesforce.com/credentials/sales-cloud-consultant |
 | Service Cloud Consultant | https://trailhead.salesforce.com/credentials/service-cloud-consultant |
+| Marketing Cloud Consultant | https://trailhead.salesforce.com/credentials/marketingcloudconsultant |
 
 Every one of those pages links the official **exam guide (PDF)** — read it before booking the exam.
+
+**Marketing Cloud is the exception:** its exam guide is a Salesforce Help article rather than a PDF, and it is the only academy here whose pass mark, prerequisite and section weights are verified against an official source. See the [Marketing Cloud Next Consultant exam guide](https://help.salesforce.com/s/articleView?id=005387657&language=en_US&type=1) (72% pass, no prerequisite) and the [free ~17-hour preparation trail](https://trailhead.salesforce.com/content/learn/trails/prepare-for-your-marketing-cloud-next-consultant-certification).
 
 ### Learn & practice
 

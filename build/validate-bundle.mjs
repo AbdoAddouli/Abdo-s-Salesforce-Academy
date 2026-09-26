@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PROJECT } from './academies.mjs';
+import { PROJECT, ACADEMIES } from './academies.mjs';
 
 const DATA = path.join(PROJECT, 'docs', 'assets', 'curricula.js');
 const GUIDES = path.join(PROJECT, 'docs', 'assets', 'guides');
@@ -31,7 +31,7 @@ let exIndexed = 0;
 if (fs.existsSync(DATA)) {
   const data = loadJs(DATA).ABDO_DATA || {};
   academies = Object.keys(data).length;
-  if (academies !== 8) fail(`expected 8 academies in curricula.js, found ${academies}`);
+  if (academies !== ACADEMIES.length) fail(`expected ${ACADEMIES.length} academies in curricula.js, found ${academies}`);
 
   for (const [slug, entry] of Object.entries(data)) {
     /* ---- exercise answer keys ---- */

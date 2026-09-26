@@ -1,5 +1,5 @@
 /* ============================================================================
- * academies.mjs — the single source of truth for the eight academies.
+ * academies.mjs — the single source of truth for the nine academies.
  *
  * Shared by:
  *   build/build-data.mjs    -> docs/assets/curricula.js   (lesson summaries)
@@ -82,6 +82,14 @@ export const ACADEMIES = [
     repo: 'Salesforce-Service-Cloud-RoadMap',
     dir: path.join(ROOT, 'salesforce Service cloud', 'Salesforce Service cloud roadmap'),
     guideDir: 'developer Service Cloud Consultant Roadmap',
+  },
+  {
+    slug: 'mktcloud', cert: 'Marketing Cloud Consultant', brand: 'Marketing Cloud Academy',
+    name: 'Marketing Cloud', icon: '📣', color: '#14B8A6',
+    desc: '17 phases across Marketing Cloud Engagement and Next: the subscriber data model, Data 360 identity resolution, deliverability, journeys, consent, Agentforce and analytics.',
+    repo: 'Salesforce-Marketing-Cloud-RoadMap',
+    dir: path.join(ROOT, 'Salesforce Marketing Cloud', 'Salesforce Mareketing Cloud Roadmap'),
+    guideDir: 'docs/guide',
   },
 ];
 

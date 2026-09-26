@@ -1,6 +1,6 @@
 /* ============================================================================
  * build-data.mjs
- * Aggregates the 8 Salesforce Academy curricula (+ exercise answer keys) into
+ * Aggregates the 9 Salesforce Academy curricula (+ exercise answer keys) into
  * a single namespaced file for the unified "Abdo's Salesforce Academy" site.
  *
  * It reads each source roadmap's docs/assets/curriculum.js and answers.js,
