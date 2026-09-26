@@ -166,6 +166,28 @@ Every `git push` to `main` triggers it automatically. You can also run it manual
 The live site is served at:
 **https://abdoaddouli.github.io/Abdo-s-Salesforce-Academy/**
 
+### Adding a custom domain (read this first)
+
+You *can* serve the site from your own domain via **Settings → Pages → Custom domain**, but
+two things will bite you:
+
+1. **You must already own the domain.** A custom domain is not a GitHub feature — it is a
+   domain you rent from a registrar. GitHub only supplies hosting and a free certificate. If
+   you paste a domain nobody has registered, GitHub stores it and then reports
+   `InvalidDNSError`, because there is no DNS record to read. Apex domains need four `A`
+   records pointing at GitHub Pages; subdomains need a `CNAME` to `abdoaddouli.github.io`
+   (no repository name). Never use a wildcard record — GitHub flags it as a takeover risk.
+
+2. **Setting or removing the domain breaks the `github.io` URL until a new deploy.** GitHub
+   301-redirects the old address to the new one immediately, and that redirect is cached at
+   the CDN edge with a long TTL. So a domain that does not resolve yet takes the working
+   site down with it, and clearing the setting does *not* bring the site back on its own —
+   the cached redirect survives. **Re-run the workflow from the Actions tab to force a fresh
+   deployment**, which is what replaces the stale redirect with a real response.
+
+Order that works: register the domain → add DNS records → set it in Pages → verify → tick
+**Enforce HTTPS**.
+
 ---
 
 ## Additional resources
