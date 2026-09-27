@@ -1,9 +1,9 @@
 /* =============================================================================
  * Abdo's Salesforce Academy — unified learning app
- * One shell, nine academies (admin, ba, cpq, datacloud, dev, headless, sales,
- * service, mktcloud). Hash routing with an academy prefix, shared renderer,
- * unified search, and a single namespaced progress store with legacy-key
- * migration.
+ * One shell, ten academies (admin, ba, cpq, datacloud, dev, headless, sales,
+ * service, mktcloud, agentforce). Hash routing with an academy prefix, shared
+ * renderer, unified search, and a single namespaced progress store with
+ * legacy-key migration.
  * ============================================================================= */
 
 /* ------------------------- theme ------------------------- */
@@ -350,6 +350,10 @@ function render() {
   const tp = $('#topPct'); if (tp) tp.textContent = op + '%';
   const tbar = $('#topBar'); if (tbar) tbar.style.width = op + '%';
   const bsub = $('#brandSub'); if (bsub) bsub.textContent = cur ? cur.meta.brand : SLUGS.length + ' academies';
+  // The footer count used to be a literal in index.html and had already gone
+  // stale (it still said 8 after Marketing Cloud made it 9). Drive it from the
+  // registry so adding an academy cannot desync it again.
+  const fcount = $('#footerCount'); if (fcount) fcount.textContent = SLUGS.length;
   bindTopSearch();
 
   if (r.view === 'phase' && mod)  return renderModule(mod);

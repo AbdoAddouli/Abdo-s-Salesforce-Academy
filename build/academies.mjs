@@ -91,6 +91,14 @@ export const ACADEMIES = [
     dir: path.join(ROOT, 'Salesforce Marketing Cloud', 'Salesforce Mareketing Cloud Roadmap'),
     guideDir: 'docs/guide',
   },
+  {
+    slug: 'agentforce', cert: 'Salesforce Agentforce Specialist', brand: 'Agentforce Specialist Academy',
+    name: 'Agentforce & AI Agents', icon: '\ud83e\udde0', color: '#84CC16',
+    desc: '17 phases on agent architecture, actions, Data 360 grounding, prompt engineering, Agent Script, subagent routing, MCP/A2A, testing, observability and governance.',
+    repo: 'Agentforce-and-Ai-Spacialist',
+    dir: path.join(ROOT, 'Salesforce agentforce and AI Spacialist', 'Agentforce and Ai specialist roadmap'),
+    guideDir: 'docs/guide',
+  },
 ];
 
 export const repoBlob = (repo) => `https://github.com/AbdoAddouli/${repo}/blob/main/`;
