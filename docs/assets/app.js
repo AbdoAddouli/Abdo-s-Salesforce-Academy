@@ -1,9 +1,9 @@
 /* =============================================================================
  * Abdo's Salesforce Academy — unified learning app
- * One shell, ten academies (admin, ba, cpq, datacloud, dev, headless, sales,
- * service, mktcloud, agentforce). Hash routing with an academy prefix, shared
- * renderer, unified search, and a single namespaced progress store with
- * legacy-key migration.
+ * One shell, eleven academies (admin, ba, cpq, datacloud, dev, headless, sales,
+ * service, mktcloud, agentforce, appbuilder). Hash routing with an academy
+ * prefix, shared renderer, unified search, and a single namespaced progress
+ * store with legacy-key migration.
  * ============================================================================= */
 
 /* ------------------------- theme ------------------------- */
@@ -1046,6 +1046,30 @@ function renderBlock(b) {
         <div class="sc-actions"><button class="btn sm ghost showA">Show answer</button></div>
         <div class="sc-a" hidden>${esc(b.a)}</div>
       </div>`;
+    /* Real-world case study: a problem a company actually had, the config that
+     * solved it, how it was built, and the part that bit them. `ex`/`proj` ask
+     * the learner to BUILD something; `case` shows what was already built, so it
+     * carries no id, no stars and no self-rating - it is reference material, not
+     * a graded activity. */
+    case 'case': {
+      const steps = (b.steps || []).map(s => `<li>${esc(s)}</li>`).join('');
+      return `
+        <div class="case-card">
+          <div class="case-head">
+            <span class="case-eyebrow">&#127970; Real world</span>
+            ${b.org ? `<span class="case-org">${esc(b.org)}</span>` : ''}
+          </div>
+          <h3 class="case-title">${esc(b.title)}</h3>
+          <div class="case-label">&#129657; The problem</div>
+          <p class="case-p">${esc(b.problem)}</p>
+          <div class="case-label">&#128736; The solution</div>
+          <p class="case-p">${esc(b.solution)}</p>
+          <div class="case-label">&#128295; How it was built</div>
+          <ol class="case-list">${steps}</ol>
+          <div class="case-gotcha">&#9888;&#65039; <b>What went wrong:</b> ${esc(b.gotcha)}</div>
+          ${b.exam ? `<div class="case-exam">&#127919; <b>Exam angle:</b> ${esc(b.exam)}</div>` : ''}
+        </div>`;
+    }
     case 'ex':
     case 'proj': {
       const isProject = b.t === 'proj';

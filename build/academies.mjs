@@ -1,5 +1,5 @@
 /* ============================================================================
- * academies.mjs — the single source of truth for the nine academies.
+ * academies.mjs — the single source of truth for the eleven academies.
  *
  * Shared by:
  *   build/build-data.mjs    -> docs/assets/curricula.js   (lesson summaries)
@@ -98,6 +98,14 @@ export const ACADEMIES = [
     repo: 'Agentforce-and-Ai-Spacialist',
     dir: path.join(ROOT, 'Salesforce agentforce and AI Spacialist', 'Agentforce and Ai specialist roadmap'),
     guideDir: 'docs/guide',
+  },
+  {
+    slug: 'appbuilder', cert: 'Salesforce Platform App Builder', brand: 'Platform App Builder Academy',
+    name: 'Platform App Builder', icon: '\ud83e\udde9', color: '#F97316',
+    desc: '15 phases of declarative configuration: security, reports, custom objects, relationships, formulas, validation, flows, approvals, Lightning App Builder, dynamic forms, console, packaging and deployment.',
+    repo: 'Salesforce-App-builder-RoadMap',
+    dir: path.join(ROOT, 'Salesforce App builder', 'Salesforce App Builder Roadmap'),
+    guideDir: 'developer Platform App Builder Roadmap',
   },
 ];
 
