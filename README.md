@@ -1,6 +1,6 @@
 # Abdo's Salesforce Academy
 
-> **One studio for all 11 Salesforce roadmaps.** Master the Salesforce ecosystem from a single site — official-style study roadmaps for certification tracks and skills, each with phases, lessons, quizzes, exercises, progress tracking and printable certificates.
+> **One studio for all 12 Salesforce roadmaps.** Master the Salesforce ecosystem from a single site — official-style study roadmaps for certification tracks and skills, each with phases, lessons, quizzes, exercises, progress tracking and printable certificates.
 
 🔗 **Live site:** https://abdoaddouli.github.io/Abdo-s-Salesforce-Academy/
 
@@ -9,7 +9,7 @@
 ## Table of contents
 
 - [What is this?](#what-is-this)
-- [The 11 academies](#the-11-academies)
+- [The 12 academies](#the-12-academies)
 - [How to use the site](#how-to-use-the-site)
 - [Progress, bookmarks & certificates](#progress-bookmarks--certificates)
 - [Tech stack & architecture](#tech-stack--architecture)
@@ -32,14 +32,14 @@ The original certification roadmaps each lived in their **own GitHub repo and it
 ### Why was it built this way?
 
 - Every source academy is a Salesforce DX-style project whose curriculum lives in a single `curriculum.js` data file.
-- A small build script (`build/build-data.mjs`) reads all eleven files, **renames module ids** so they never collide, and merges everything into one data bundle.
+- A small build script (`build/build-data.mjs`) reads all twelve files, **renames module ids** so they never collide, and merges everything into one data bundle.
 - `app.js` renders that bundle — same look & feel as the original sites, but unified.
 
 No server, no database, no framework dependencies. Everything runs in the browser and your progress stays on your machine.
 
 ---
 
-## The 11 academies
+## The 12 academies
 
 | # | Academy | Phases | Focus | Source repo | Live site |
 |---|---------|-------:|-------|-------------|-----------|
@@ -54,6 +54,7 @@ No server, no database, no framework dependencies. Everything runs in the browse
 | 9 | **Marketing Cloud** | 17 | Subscriber data model, Data 360 identity resolution, deliverability, journeys, consent, Agentforce & analytics — for the **Marketing Cloud Consultant** certification | [Salesforce-Marketing-Cloud-RoadMap](https://github.com/AbdoAddouli/Salesforce-Marketing-Cloud-RoadMap) | [open](https://abdoaddouli.github.io/Salesforce-Marketing-Cloud-RoadMap/) |
 | 10 | **Agentforce & AI Agents** | 17 | Agent architecture, actions, Data 360 grounding, prompt engineering, Agent Script, subagent routing, MCP/A2A, testing, observability & governance — for the **Agentforce Specialist** certification | [Agentforce-and-Ai-Spacialist](https://github.com/AbdoAddouli/Agentforce-and-Ai-Spacialist) | [open](https://abdoaddouli.github.io/Agentforce-and-Ai-Spacialist/) |
 | 11 | **Platform App Builder** | 15 | Security, reports, custom objects, formulas, validation, flows, approvals, Lightning App Builder, dynamic forms, console & packaging — for the **Platform App Builder** certification | [Salesforce-App-builder-RoadMap](https://github.com/AbdoAddouli/Salesforce-App-builder-RoadMap) | [open](https://abdoaddouli.github.io/Salesforce-App-builder-RoadMap/) |
+| 12 | **Sharing & Visibility Architect** | 20 | Org-wide defaults, role hierarchy, sharing rules, teams, Apex managed sharing, external users, permissions, FLS, masking, scalability & skew, and the Summer '26 / Winter '27 enforcement wave — for the **Platform Sharing and Visibility Architect** certification | [Salesforce-Sharing-Visibility-Architect-Roadmap](https://github.com/AbdoAddouli/Salesforce-Sharing-Visibility-Architect-Roadmap) | [open](https://abdoaddouli.github.io/Salesforce-Sharing-Visibility-Architect-Roadmap/) |
 
 ---
 
@@ -63,7 +64,7 @@ No server, no database, no framework dependencies. Everything runs in the browse
 The first screen shows a card for every academy with its live progress bar, a few overall stats (units completed, quiz questions answered perfectly, estimated remaining study time) and a "Continue" button that drops you back exactly where you left off.
 
 ### Navigation & academy switcher
-- The **sidebar** shows the current academy's phases; a **dropdown at the top** switches between all eleven academies.
+- The **sidebar** shows the current academy's phases; a **dropdown at the top** switches between all twelve academies.
 - The **top bar** has a global **search** — press `/` anywhere (or click the search box) and search across every academy. Results include phases, lessons and quizzes.
 
 ### Routes (hash-based, bookmarkable)
@@ -97,7 +98,7 @@ Many quizzes and exercises hide their solution until you **answer or attempt the
 **Pure static web app — no build step, no dependencies at runtime.**
 
 ```
-9 source academies                          THIS REPO: Abdo-s-Salesforce-Academy
+12 source academies                         THIS REPO: Abdo-s-Salesforce-Academy
 (salesforce-* RoadMap repos)               ┌──────────────────────────────────────┐
   docs/assets/curriculum.js                 │  docs/  (what GitHub Pages serves)   │
   docs/assets/answers.js                    │  ├─ index.html   (app shell)         │
@@ -115,7 +116,7 @@ Many quizzes and exercises hide their solution until you **answer or attempt the
         └────────────────────────  → emits docs/assets/curricula.js
 ```
 
-- `docs/assets/curricula.js` — the merged data bundle for all 11 academies. **Generated by `build/build-data.mjs` — do not edit by hand.**
+- `docs/assets/curricula.js` — the merged data bundle for all 12 academies. **Generated by `build/build-data.mjs` — do not edit by hand.**
 - `docs/assets/app.js` — the unified application (routing, rendering, quiz engine, gated exercises, progress store, search).
 - `docs/assets/style.css` — design system shared by every view.
 - `.github/workflows/deploy.yml` — deploys `docs/` to GitHub Pages on every push to `main`.
@@ -135,7 +136,7 @@ python -m http.server 8000 -d docs
 
 ### Regenerating the data bundle
 
-Run this whenever a curriculum in one of the eleven source academies changes:
+Run this whenever a curriculum in one of the twelve source academies changes:
 
 ```bash
 node build/build-data.mjs
@@ -143,13 +144,13 @@ node build/build-data.mjs
 
 What it does:
 
-1. Walks the **sibling folders** next to this repo (the eleven academy repos).
+1. Walks the **sibling folders** next to this repo (the twelve academy repos).
 2. Evaluates each `curriculum.js` / `answers.js` in a sandbox to read `ACADEMY` and `GUIDE`.
 3. Prefixes every module id with the academy's slug (e.g. `fund` → `admin-fund`) so ids never clash — they collide between academies today.
 4. Normalises the different module shapes (gated solutions, `ex`/`proj` blocks, inline answers, Data Cloud `hero` files…) into one schema.
 5. Writes `docs/assets/curricula.js`, deterministically — running it twice produces the exact same bytes, so commits stay clean.
 
-> **CI safety net:** the Pages workflow **validates the committed bundle** on every push (asks Node to parse it and confirm all **11 academies** are present), so a broken bundle can never be deployed.
+> **CI safety net:** the Pages workflow **validates the committed bundle** on every push (asks Node to parse it and confirm all **12 academies** are present), so a broken bundle can never be deployed.
 
 ---
 
@@ -209,6 +210,7 @@ A curated toolkit to help you study, practice, and go all the way to certificati
 | Sales Cloud Consultant | https://trailhead.salesforce.com/credentials/sales-cloud-consultant |
 | Service Cloud Consultant | https://trailhead.salesforce.com/credentials/service-cloud-consultant |
 | Marketing Cloud Consultant | https://trailhead.salesforce.com/credentials/marketingcloudconsultant |
+| Platform Sharing and Visibility Architect | https://trailhead.salesforce.com/credentials/sharingandvisibilityarchitect |
 
 Every one of those pages links the official **exam guide (PDF)** — read it before booking the exam.
 

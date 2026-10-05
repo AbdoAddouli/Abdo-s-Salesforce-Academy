@@ -107,6 +107,14 @@ export const ACADEMIES = [
     dir: path.join(ROOT, 'Salesforce App builder', 'Salesforce App Builder Roadmap'),
     guideDir: 'developer Platform App Builder Roadmap',
   },
+  {
+    slug: 'sharing', cert: 'Salesforce Certified Platform Sharing and Visibility Architect', brand: 'Sharing & Visibility Architect Academy',
+    name: 'Sharing and Visibility Architecture', icon: '\ud83d\udd10', color: '#7E22CE',
+    desc: '20 phases on OWD, role hierarchy, sharing rules, teams, Apex managed sharing, external users, permissions, scalability and the Summer \'26 / Winter \'27 enforcement wave.',
+    repo: 'Salesforce-Sharing-Visibility-Architect-Roadmap',
+    dir: path.join(ROOT, 'Salesforce Sharing and Visibility Architect', 'Salesforce Sharing and Visibility Architect Roadmap'),
+    guideDir: 'docs/guide',
+  },
 ];
 
 export const repoBlob = (repo) => `https://github.com/AbdoAddouli/${repo}/blob/main/`;
